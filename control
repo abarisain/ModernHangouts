@@ -1,0 +1,9 @@
+Package: com.namelessdev.modernhangouts
+Name: ModernHangouts
+Depends: mobilesubstrate
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: Bring iOS 7 goodness to hangout !
+Maintainer: Arnaud Barisain-Monrose
+Author: Arnaud Barisain-Monrose
+Section: Tweaks
