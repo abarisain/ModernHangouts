@@ -19,6 +19,9 @@ along with ModernHangouts.  If not, see <http://www.gnu.org/licenses/>.
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
+@interface GBFViewController
+@end
+
 @interface GBAConversationEventChatMessageTableCellView : UITableViewCell
 @end
 
@@ -142,6 +145,7 @@ along with ModernHangouts.  If not, see <http://www.gnu.org/licenses/>.
 %hook GBANotificationSplitView
 
 static UIView *statusBarBackground;
+static GBANotificationSplitView *notif;
 
 - (id)initWithContentView:(id)contentView modelRoot:(id)root
 {
@@ -156,14 +160,16 @@ static UIView *statusBarBackground;
 - (void)layoutSubviews
 {
     %orig;
+    notif = self;
     int titlebarHeight = 0;
     CGRect frame = self.frame;
     CGRect statusBarFrame = statusBarBackground.frame;
+    CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     if (self.transform.b != 0) {
         // Landscape
         titlebarHeight = [[UIApplication sharedApplication] statusBarFrame].size.width;
         frame.origin.x = titlebarHeight;
-        frame.size.width -= titlebarHeight;
+        frame.size.width = screenHeight - titlebarHeight;
         statusBarFrame.origin.y = -20;
         statusBarFrame.size.height = titlebarHeight;
         statusBarFrame.size.width = frame.size.height;
@@ -171,7 +177,7 @@ static UIView *statusBarBackground;
         // Portrait
         titlebarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
         frame.origin.y = titlebarHeight;
-        frame.size.height -= titlebarHeight;
+        frame.size.height = screenHeight - titlebarHeight;
         statusBarFrame.origin.y = -20;
         statusBarFrame.size.width = frame.size.width;
         statusBarFrame.size.height = titlebarHeight;
@@ -267,18 +273,20 @@ static UIView *statusBarBackground;
 -(BOOL)application:(id)application didFinishLaunchingWithOptions:(id)options
 {
     BOOL origVal = %orig;
-    if(![@YES isEqual:[[NSUserDefaults standardUserDefaults] objectForKey:@"UIForceModernUI"]])
-    {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Modern Hangouts"
-                                                        message:@"Please kill (swipe up in task manager) and restart hangouts in order to enable this tweak. This annoyance will be taken care of in a later version :)"
-                                                       delegate:self
-                                              cancelButtonTitle:@"OK"
-                                              otherButtonTitles:nil];
-        [alert show];
-    }
     [[NSUserDefaults standardUserDefaults] setObject:@YES forKey:@"UIForceModernUI"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     return origVal;
+}
+
+%end
+
+// Fix the message box too low at first opening
+%hook GBFViewController
+
+-(void)viewWillAppear:(BOOL)view
+{
+    %orig;
+    [notif layoutSubviews];
 }
 
 %end
